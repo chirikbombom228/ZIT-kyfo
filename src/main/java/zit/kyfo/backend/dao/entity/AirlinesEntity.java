@@ -38,7 +38,7 @@ public class AirlinesEntity extends AbstractEntity<Integer> implements Serializa
 
     @Column(name = "name", nullable = false)
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public void setName(@NonNull String name) {
@@ -47,7 +47,7 @@ public class AirlinesEntity extends AbstractEntity<Integer> implements Serializa
 
     @Column(name = "login", nullable = false, unique = true)
     public String getLogin() {
-        return login;
+        return this.login;
     }
 
     public void setLogin(@NonNull String login) {
@@ -56,7 +56,7 @@ public class AirlinesEntity extends AbstractEntity<Integer> implements Serializa
 
     @Column(name = "password_hash", nullable = false)
     public String getPasswordHash() {
-        return passwordHash;
+        return this.passwordHash;
     }
 
     public void setPasswordHash(@NonNull String passwordHash) {
@@ -65,14 +65,19 @@ public class AirlinesEntity extends AbstractEntity<Integer> implements Serializa
 
     @OneToMany
     public List<FlightEntity> getFlight() {
-        return flight;
+        return this.flight;
     }
 
     public void setFlight(@NonNull List<FlightEntity> flight) {
         this.flight = flight;
     }
 
-
+    public boolean addFlight(FlightEntity flight) {
+        if (flight == null) {
+            throw new IllegalArgumentException("Flight cannot be null");
+        }
+        return this.flight.add(flight);
+    }
 
     @Override
     public boolean equals(Object o) {
