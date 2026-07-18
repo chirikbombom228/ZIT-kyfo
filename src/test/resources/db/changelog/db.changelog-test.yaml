@@ -1,17 +1,25 @@
 databaseChangeLog:
   - include:
       file: classpath:db/changelog/migrations/ddl-01.sql
+      relativeToChangeLogFile: true
   - include:
       file: classpath:db/changelog/realese/dml-01.sql
+      relativeToChangelogFile: true
   - include:
       file: classpath:db/changelog/realese/dml-02.sql
+      relativeToChangelogFile: true
   - include:
       file: classpath:db/changelog/realese/dml-03.sql
+      relativeToChangelogFile: true
   - include:
       file: classpath:db/changelog/realese/dml-04.sql
+      relativeToChangelogFile: true
   - include:
       file: classpath:db/changelog/realese/dml-05.sql
+      relativeToChangelogFile: true
   - include:
       file: classpath:db/changelog/realese/dml-06.sql
+      relativeToChangelogFile: true
   - include:
       file: classpath:db/changelog/realese/dml-07.sql
+      relativeToChangelogFile: true
