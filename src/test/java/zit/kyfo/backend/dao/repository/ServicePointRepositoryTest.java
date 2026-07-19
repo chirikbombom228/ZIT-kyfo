@@ -19,13 +19,13 @@ class ServicePointRepositoryTest extends AbstractRepositoryTest {
 
     @Test
     void count_returnsTwentySeededServicePoints() {
-        assertThat(servicePointRepository.count()).isEqualTo(20L);
+        assertThat(servicePointRepository.count()).isEqualTo(21L);
     }
 
     @Test
     void findByActiveTrue_returnsOnlyActive() {
         List<ServicePointEntity> active = servicePointRepository.findByActiveTrue();
-        assertThat(active).hasSize(18);
+        assertThat(active).hasSize(19);
         assertThat(active).allMatch(ServicePointEntity::isActive);
     }
 

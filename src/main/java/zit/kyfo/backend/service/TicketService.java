@@ -7,6 +7,7 @@ import zit.kyfo.backend.dao.entity.AirlinesEntity;
 import zit.kyfo.backend.dao.entity.FlightEntity;
 import zit.kyfo.backend.dao.entity.TicketEntity;
 import zit.kyfo.backend.dao.repository.TicketRepository;
+import zit.kyfo.backend.dto.flights.FlightDto;
 import zit.kyfo.backend.dto.other.PaymentResponseDto;
 import zit.kyfo.backend.dto.other.RestoreDto;
 import zit.kyfo.backend.dto.other.TopUpProcessDto;
@@ -26,6 +27,19 @@ public class TicketService {
     private final FlightsService flightsService;
     private final TransactionService transactionService;
 
+    public List<TicketDto> findAll() {
+        List<TicketEntity> ticketEntities = ticketRepository.findAll();
+        return ticketEntities.stream()
+                .map(this::mapToTicketDto)
+                .collect(Collectors.toList());
+    }
+
+    public BigDecimal checkBalance(String ticketNumber) {
+        TicketEntity entity = ticketRepository.findByTicketNumber(ticketNumber)
+                .orElseThrow(() -> new RuntimeException("Билет с номером " + ticketNumber + " не найден"));
+        return entity.getBalance();
+    }
+
     public TicketDto findById(int id) {
         TicketEntity entity = ticketRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Билет с id " + id + " не найден"));
@@ -38,7 +52,7 @@ public class TicketService {
         return mapToTicketDto(entity);
     }
 
-    private List<TicketDto> getTicketsByFlightId(int flightId) {
+    public List<TicketDto> getTicketsByFlightId(int flightId) {
         FlightEntity flightEntity = flightsService.findEntityById(flightId);
 
         List<TicketEntity> tickets = ticketRepository.findByFlightId(flightEntity.getId());
@@ -59,7 +73,7 @@ public class TicketService {
     }
 
     @Transactional
-    public TopUpProcessDto processTopUp(int flightId, BigDecimal amount) {
+    public TopUpProcessDto processTopUp(int flightId, BigDecimal amount, int servicePointId) {
         FlightEntity flightEntity = flightsService.findEntityById(flightId);
 
         List<TicketEntity> tickets = ticketRepository.findByFlightId(flightId);
@@ -72,7 +86,7 @@ public class TicketService {
             ticket.setBalance(ticket.getBalance().add(amount));
             ticketRepository.save(ticket);
 
-            transactionService.createTopUpTransaction(ticket, amount);
+            transactionService.createTopUpTransaction(ticket, amount, servicePointId);
         }
 
         TopUpProcessDto response = new TopUpProcessDto();
@@ -80,12 +94,13 @@ public class TicketService {
         response.setMessage("Компенсация начислена на " + tickets.size() + " талонов");
         response.setAmount(amount);
         response.setTicketsAffected(tickets.size());
+        response.setServicePoint(servicePointId);
 
         return response;
     }
 
     @Transactional
-    public PaymentResponseDto processPayment(String ticketNumber, BigDecimal amount) {
+    public PaymentResponseDto processPayment(String ticketNumber, BigDecimal amount, Integer servicePoint) {
         TicketEntity ticket = ticketRepository.findByTicketNumber(ticketNumber)
                 .orElseThrow(() -> new RuntimeException("Талон с номером " + ticketNumber + " не найден"));
 
@@ -96,13 +111,14 @@ public class TicketService {
         ticket.setBalance(ticket.getBalance().subtract(amount));
         ticketRepository.save(ticket);
 
-        transactionService.createPurchaseTransaction(ticket, amount);
+        transactionService.createPurchaseTransaction(ticket, amount, servicePoint);
 
         PaymentResponseDto response = new PaymentResponseDto();
         response.setSuccess(true);
         response.setMessage("Оплата прошла успешно");
         response.setTicketNumber(ticketNumber);
         response.setAmount(amount);
+        response.setServicePoint(servicePoint);
         response.setNewBalance(ticket.getBalance());
 
         return response;
@@ -124,7 +140,7 @@ public class TicketService {
             BigDecimal currentBalance = ticket.getBalance();
 
             if (currentBalance.compareTo(BigDecimal.ZERO) > 0) {
-                transactionService.createPurchaseTransaction(ticket, currentBalance.negate());
+                transactionService.createPurchaseTransaction(ticket, currentBalance.negate(), 1);
 
                 ticket.setBalance(BigDecimal.ZERO);
                 ticketRepository.save(ticket);
@@ -135,7 +151,7 @@ public class TicketService {
 
         RestoreDto response = new RestoreDto();
         response.setSuccess(true);
-        response.setMessage("Начисления откачены для " + restoredCount + " талонов");
+        response.setMessage("Начисления отменены для " + restoredCount + " талонов");
         response.setTicketsRestored(restoredCount);
 
         return response;
@@ -152,7 +168,7 @@ public class TicketService {
             throw new RuntimeException("Баланс уже нулевой");
         }
 
-        transactionService.createPurchaseTransaction(ticket, currentBalance.negate());
+        transactionService.createPurchaseTransaction(ticket, currentBalance.negate(), 1);
 
         ticket.setBalance(BigDecimal.ZERO);
         ticketRepository.save(ticket);
