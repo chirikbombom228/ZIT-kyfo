@@ -25,7 +25,7 @@ class ServicePointRepositoryTest extends AbstractRepositoryTest {
     @Test
     void findByActiveTrue_returnsOnlyActive() {
         List<ServicePointEntity> active = servicePointRepository.findByActiveTrue();
-        assertThat(active).hasSize(18);
+        assertThat(active).hasSize(19);
         assertThat(active).allMatch(ServicePointEntity::isActive);
     }
 
