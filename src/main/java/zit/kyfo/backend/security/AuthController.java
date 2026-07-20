@@ -1,5 +1,9 @@
 package zit.kyfo.backend.security;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -24,6 +28,7 @@ import zit.kyfo.backend.dto.LoginResponse;
 
 import java.util.Map;
 
+@Tag(name = "Security", description = "API для авторизации и аутентификации")
 @RestController
 @RequestMapping("/api/v1/airlines")
 @RequiredArgsConstructor
@@ -34,6 +39,11 @@ public class AuthController {
     private final SecurityContextRepository securityContextRepository =
             new HttpSessionSecurityContextRepository();
 
+    @Operation(summary = "Логин в систему", description = "Возвращает cookie для авторизации в системе")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Вход успешен"),
+            @ApiResponse(responseCode = "401", description = "Неправильный логин или пароль")
+    })
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request,
                                    HttpServletRequest httpRequest,
