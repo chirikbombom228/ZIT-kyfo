@@ -6,8 +6,11 @@ import org.springframework.stereotype.Service;
 import zit.kyfo.backend.dao.entity.AirlinesEntity;
 import zit.kyfo.backend.dao.entity.FlightEntity;
 import zit.kyfo.backend.dao.repository.FlightRepository;
+import zit.kyfo.backend.dto.flights.CurrentDelayDto;
 import zit.kyfo.backend.dto.flights.FlightDto;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,6 +46,35 @@ public class FlightsService {
     public FlightEntity findEntityById(int id) {
         return flightRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Авиакомпания с id " + id + " не найдена"));
+    }
+
+    public CurrentDelayDto getCurrentDelayMinutes(int flightId) {
+        FlightEntity flight = findEntityById(flightId);
+
+        if (flight.getDelayMinutes() > 0) {
+            return new CurrentDelayDto(
+                    flightId,
+                    formatDelay(flight.getDelayMinutes()),
+                    flight.getDelayMinutes().longValue()
+            );
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        long minutes = Duration.between(flight.getTimeOut(), now).toMinutes();
+        if (minutes < 0) minutes = flight.getDelayMinutes();
+
+        return new CurrentDelayDto(
+                flightId,
+                formatDelay(minutes),
+                minutes
+        );
+    }
+
+    private String formatDelay(long minutes) {
+        if (minutes == 0) return "Без задержки";
+        long hours = minutes / 60;
+        long mins = minutes % 60;
+        return hours > 0 ? hours + " ч " + mins + " мин" : mins + " мин";
     }
 
     private FlightDto mapToFlightDto(FlightEntity entity) {
