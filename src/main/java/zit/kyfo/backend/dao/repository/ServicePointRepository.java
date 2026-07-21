@@ -34,4 +34,21 @@ public interface ServicePointRepository extends JpaRepository<ServicePointEntity
             ORDER BY sum(t.amount) DESC NULLS LAST   
             """)
     List<SalesByPointDto> moneyPeriod(@Param("start")LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Query("""
+            SELECT NEW zit.kyfo.backend.dto.FinanceReporting.SalesByPointDto(
+                 sp.id,
+                 sp.name,
+                 COALESCE(SUM(t.amount), 0),
+                 CAST(COUNT(t.id) AS int)
+            )
+            FROM transaction_entity t
+                    JOIN t.ticket tk
+                    JOIN tk.flight f
+                    JOIN t.servicePoint sp
+                    WHERE f.id = :flightId
+                      AND t.type = 'purchase'
+                    GROUP BY sp.id, sp.name
+            """)
+    List<SalesByPointDto> moneyFlight(@Param("flightId") int flightId);
 }
