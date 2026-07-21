@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -143,5 +144,15 @@ public class AirlinesController {
     @DeleteMapping("/ticket/{ticketNumber}/payment/restore")
     public ResponseEntity<RestoreDto> restoreTicketPayment(@PathVariable("ticketNumber") String ticketNumber) {
         return ResponseEntity.ok(ticketService.restoreTicketPayment(ticketNumber));
+    }
+
+    @Operation(
+            summary = "Получение всех точек обслуживания в конкретном аэропорту",
+            description = "Получение происходит по уникальному коду аэропорта (VKO, SVO и т.д.)"
+    )
+    @ApiResponse(responseCode = "200", description = "Список успешно получен")
+    @GetMapping(path = "/relatedServicePoints", params = "uniqueCode")
+    public ResponseEntity<?> findRelatedCafesByAirportCode(@Param("uniqueCode") String uniqueCode) {
+        return ResponseEntity.ok(this.servicePointService.findAllByAirportUniqueCode(uniqueCode));
     }
 }

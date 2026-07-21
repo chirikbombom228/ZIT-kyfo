@@ -51,4 +51,10 @@ public interface ServicePointRepository extends JpaRepository<ServicePointEntity
                     GROUP BY sp.id, sp.name
             """)
     List<SalesByPointDto> moneyFlight(@Param("flightId") int flightId);
+
+
+    @Query("SELECT s FROM service_points_entity s " +
+            "JOIN FETCH airports_entity airportsEntity ON s.airport.id = airportsEntity.id " +
+            "WHERE airportsEntity.uniqueCode = :uniqueCode")
+    List<ServicePointEntity> findAllByAirportUniqueCode(@Param("uniqueCode") String uniqueCode);
 }

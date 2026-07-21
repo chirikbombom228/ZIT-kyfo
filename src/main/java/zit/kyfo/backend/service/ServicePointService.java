@@ -4,15 +4,20 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import zit.kyfo.backend.dao.entity.AirlinesEntity;
+import zit.kyfo.backend.dao.entity.AirportsEntity;
 import zit.kyfo.backend.dao.entity.ServicePointEntity;
+import zit.kyfo.backend.dao.repository.AirportsRepository;
 import zit.kyfo.backend.dao.repository.ServicePointRepository;
 import zit.kyfo.backend.dto.servicePoints.ServicePointDto;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class ServicePointService {
 
     private final ServicePointRepository servicePointRepository;
+    private final AirportsRepository airportsRepository;
 
     @Transactional
     public ServicePointDto validatePoint(int pointId) {
@@ -28,6 +33,16 @@ public class ServicePointService {
     public ServicePointEntity findEntityById(int id) {
         return servicePointRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Точка обслуживания с id " + id + " не найдена"));
+    }
+
+    public List<ServicePointDto> findAllByAirportUniqueCode(String uniqueCode) {
+        AirportsEntity airportsEntity = this.airportsRepository.findByUniqueCode(uniqueCode)
+                .orElseThrow(() -> new RuntimeException("Такого аэропорта не существует"));
+
+        return this.servicePointRepository.findAllByAirportUniqueCode(uniqueCode)
+                .stream()
+                .map(this::mapToDto)
+                .toList();
     }
 
     private ServicePointDto mapToDto(ServicePointEntity entity) {
